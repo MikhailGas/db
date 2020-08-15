@@ -116,5 +116,16 @@ create table users_communities(
 	foreign key (community_id) references communities(id)
 );
 
+drop table if exists likes;
+create table likes(
+	id serial primary key,
+	put_user_id bigint unsigned not null,
+	object_like enum('user', 'post', 'photo'),
+	object_user_id bigint unsigned not null,
+	created_at datetime default current_timestamp,
+	foreign key(put_user_id) references profiles(user_id),
+	foreign key(object_user_id) references profiles(user_id)
+);
+
 
 
