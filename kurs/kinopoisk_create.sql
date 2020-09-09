@@ -1,3 +1,4 @@
+drop database if exists kinopoisk;
 create database kinopoisk;
 use kinopoisk;
 
@@ -13,17 +14,7 @@ create table films(
 	type enum('Фильм', 'Сериал', 'Документальный фильм') not null,
 	rating decimal(2, 1),
 	year year(4),
-	duration smallint unsigned,
-	poster_id bigint unsigned
-);
-
-drop table if exists film_country;
-
--- страна/страны выпустившие фильмы
-create table film_country(
-	id serial primary key,
-	film_id bigint unsigned not null,
-	country_id bigint unsigned not null
+	duration smallint unsigned
 );
 
 drop table if exists countrys;
@@ -34,45 +25,29 @@ create table countrys(
 	country varchar(255) unique not null
 );
 
-drop table if exists film_producers;
--- Режиссер/режиссеры фильмов
+drop table if exists photos;
 
-create table film_producers(
+-- Фото режиссеров и актеров и полбзователей
+
+create table photos(
 	id serial primary key,
-	film_id bigint unsigned not null,
-	producer_id bigint unsigned not null
-);
-
-drop table if exists producers;
--- Справочник "Продюссеры"
-
-create table producers(
-	id serial primary key,
-	firstname varchar(100),
-	lastname varchar(100) not null,
-	photo_id bigint unsigned
-);
-
-drop table if exists posters;
-
--- Афиши к фильмам
-
-create table posters(
-	id serial primary key,
-	film_id bigint unsigned not null,
 	file varchar(255)
 );
 
+drop table if exists persons;
 
-drop table if exists film_genres;
+-- Справочник "Режиссеры и актёры"
 
--- Жанр/жанры фильма
-
-create table film_genres(
+create table persons(
 	id serial primary key,
-	film_id bigint unsigned not null,
-	genre_id bigint unsigned not null
+	firstname varchar(150),
+	lastname varchar(150) not null,
+	role enum('Режиссёр', 'Актёр'),
+	photo_id bigint unsigned,
+	foreign key (photo_id) references photos(id)
 );
+
+
 
 drop table if exists genres;
 
@@ -83,35 +58,61 @@ create table genres(
 	genre varchar(150) unique
 );
 
-drop table if exists film_main_roless;
+drop table if exists film_country;
 
--- В главных ролях
+-- страна/страны выпустившие фильмы
+create table film_country(
+	film_id bigint unsigned not null,
+	country_id bigint unsigned not null,
+	primary key (film_id, country_id),
+	foreign key(film_id) references films(id),
+	foreign key(country_id) references countrys(id)
+);
 
-create table film_main_roles(
+
+
+drop table if exists film_producers_artists;
+-- Режиссер/режиссеры фильмов
+
+create table film_producers_artists(
+	film_id bigint unsigned not null,
+	person_id bigint unsigned not null,
+	primary key (film_id, person_id),
+	foreign key(film_id) references films(id),
+	foreign key(person_id) references persons(id)
+);
+
+
+drop table if exists posters;
+
+-- Афиши к фильмам
+
+create table posters(
 	id serial primary key,
 	film_id bigint unsigned not null,
-	artist_id bigint unsigned not null
+	file varchar(255),
+	foreign key(film_id) references films(id)
 );
 
-drop table if exists artists;
 
--- Справочник "Актеры"
+drop table if exists film_genres;
 
-create table artists(
-	id serial primary key,
-	firstname varchar(150),
-	lastname varchar(150) not null,
-	photo_id bigint unsigned
+-- Жанр/жанры фильма
+
+create table film_genres(
+	film_id bigint unsigned not null,
+	genre_id bigint unsigned not null,
+	primary key (film_id, genre_id),
+	foreign key(film_id) references films(id),
+	foreign key(genre_id) references genres(id)
 );
 
-drop table if exists photos;
 
--- Фото режиссеров и актеров
 
-create table photos(
-	id serial primary key,
-	file varchar(255)
-);
+
+
+
+
 
 drop table if exists users;
 
@@ -129,12 +130,13 @@ drop table if exists profiles;
 -- Профиль пользователя
 
 create table profiles(
-	id serial primary key,
+	id bigint unsigned not null primary key,
 	firstname varchar(150),
 	lastname varchar(150) not null,
 	gender char(1),
 	birthday date,
-	photo_id bigint unsigned not null
+	photo_id bigint unsigned not null,
+	foreign key (id) references users(id)
 );
 
 drop table if exists film_estimations;
@@ -145,7 +147,9 @@ create table film_estimations(
 	id serial primary key,
 	film_id bigint unsigned not null,
 	user_id bigint unsigned not null,
-	score decimal(2, 1),
-	created_at date
+	score tinyint(2) unsigned,
+	created_at date default current_timestamp,
+	foreign key (user_id) references users(id),
+	foreign key (film_id) references films(id)
 );
 
